@@ -1,0 +1,7 @@
+mpiInit
+if labindex==1
+    
+t0=f1;
+elseif labindex==2
+[t0,result]=f2;
+end
