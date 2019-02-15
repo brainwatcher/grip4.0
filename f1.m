@@ -113,6 +113,7 @@ acc_all=cell(trial_num,length(bpm));
 rt_all=zeros(trial_num,length(bpm));
 path_all=cell(trial_num,length(bpm));
 mark_all=cell(trial_num,length(bpm));
+loop_num=zeros(trial_num,length(bpm));
 lag=0.08;
 t0=GetSecs;
 labSend({bpm,trial_num}, 2);
@@ -159,8 +160,8 @@ for w=1:length(bpm)
         Screen('DrawTexture', window, imageDisplay_cursor, [], [start(1),cursor_height,start(1)+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
         Screen('DrawTexture', window, imageDisplay_go, [], [symbol_pos,symbol_pos+symbol_size],0);
         rt0=Screen('Flip',window,t0+i*interval);
-    
         while GetSecs-rt0<interval*5
+            loop_num(j,w)=loop_num(j,w)+1;
             [~,NumBuf]=calllib('USB_DAQ_DLL_V42','AD_continu_V42',1,0, NumSamp,FrqSamp,NumBuf);%AD_continu_V42(int mod_in,int chan, int Num_Sample,int Rate_Sample,short  *databuf);
             force=mean(NumBuf);
             current_cursor=getloc(force);
@@ -185,7 +186,7 @@ for w=1:length(bpm)
                 break
             end
         end
-        WaitSecs(2);
+        WaitSecs(1.5);
         [acc,path,mark,shoot] = evaluate_acc(path,time,rt0,interval,gate,whichgate);
         acc_all{j,w}=acc;
         rt_all(j,w)=rt;
