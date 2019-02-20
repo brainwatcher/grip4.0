@@ -1,8 +1,8 @@
 function [t0,rect] = f1(subinfo)
 %% important parameter
 trial_num=3;
-% % bpm=[30 , 100, 38, 90, 60, 24, 75, 45, 110];
-bpm=[100];
+% bpm=[30 , 100, 38, 90, 60, 24, 75, 45, 110];
+ bpm=[100];
 %% prepare for screen
 root=pwd;
 cd(root);  

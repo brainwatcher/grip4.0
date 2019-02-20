@@ -1,4 +1,4 @@
-function[acc,pks,locs]=analysis_acc(subinfonum,block,trial_num)
+function[acc,pks,locs,path,time,shoot]=analysis_acc(subinfonum,block,trial_num)
 cd data
 S=load(['outcome' num2str(subinfonum) '.mat']);
 cd ..
@@ -11,7 +11,8 @@ back=imread('back.bmp');
 B=load('back.mat');
 
 cd ..
-rect=[ 0           0        1440         900];
+[width, height]=Screen('WindowSize',whichscreen);
+rect=[0,0,width,height];
 ratio=min(rect(3)/size(back,2),rect(4)/size(back,1));
 gate=B.gate0*ratio;
 base=(2*B.home0(2)-B.home0(1))*ratio;
@@ -74,6 +75,7 @@ for i=1:5
     else
         bin_inter{i}=[];
         k{i}=[];
+    end
 end
 %% judge there is any maxima exactly in the gate
 acc=zeros(1,5);
