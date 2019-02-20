@@ -1,4 +1,4 @@
-function [t0] = f1(subinfo)
+function [t0,rect] = f1(subinfo)
 %% important parameter
 trial_num=3;
 % % bpm=[30 , 100, 38, 90, 60, 24, 75, 45, 110];
@@ -26,7 +26,7 @@ right=imread('right.png');
 wrong=imread('wrong.png');
 relax=imread('relax.bmp');
 bpm_prepare=imread('bpm_prepare.bmp');
-load back.mat
+B=load('back.mat');
 loadlibrary('USB_DAQ_DLL_V42','USB_DAQ_DLL_V42');
 cd ..
 %% open window
@@ -34,8 +34,9 @@ cd ..
 ratio=min(rect(3)/size(back,2),rect(4)/size(back,1)); % the ratio of zoom back image 
 back_img=imresize(back,ratio);
 imageDisplay=Screen('MakeTexture', window, back_img);
-gate=gate0*ratio;% zoomed gate position
-start=home0*ratio;% zoomed home position
+gate=B.gate0*ratio;% zoomed gate position
+base=(2*B.home0(2)-B.home0(1))*ratio;% shoot base threshold 
+start=B.home0*ratio;% zoomed home position
 %% cursor
 cursor_size=25;
 cursor_img=ones(cursor_size,cursor_size);%cursorsize 
@@ -44,24 +45,17 @@ cursor_height=0.5*(rect(4));
 gate(:,2)=gate(:,2)-cursor_size;
 seq=[4,1,3,5,2];% gate sequence
 [~,~,whichgate]=intersect([1,2,3,4,5],seq);
+ans_gate=gate(whichgate,:);
 imageDisplay_result=zeros(1,4);
+shoot_color=[237,28,36;46,49,146;0,111,59;91,155,213];
 shoot_img=zeros(cursor_size,cursor_size,3);
-shoot_img(:,:,1)=237;
-shoot_img(:,:,2)=28;
-shoot_img(:,:,3)=36;
-imageDisplay_result(1)=Screen('MakeTexture', window, shoot_img);
-shoot_img(:,:,1)= 46;
-shoot_img(:,:,2)=49;
-shoot_img(:,:,3)=146;
-imageDisplay_result(2)=Screen('MakeTexture', window, shoot_img);
-shoot_img(:,:,1)= 0;
-shoot_img(:,:,2)=111;
-shoot_img(:,:,3)=59;
-imageDisplay_result(3)=Screen('MakeTexture', window, shoot_img);
-shoot_img(:,:,1)= 91;
-shoot_img(:,:,2)=155;
-shoot_img(:,:,3)=213;
-imageDisplay_result(4)=Screen('MakeTexture', window, shoot_img);
+for i=1:4
+    for j=1:3
+        shoot_img(:,:,j)=shoot_color(i,j);
+    end
+    imageDisplay_result(i)=Screen('MakeTexture', window, shoot_img);
+end
+
 
 %% start symbol
 symbol_size=30;
@@ -111,8 +105,10 @@ Screen('DrawTexture', window, imageDisplay8, [], [],0);
 Screen('Flip',window)
 acc_all=cell(trial_num,length(bpm));
 rt_all=zeros(trial_num,length(bpm));
+rt0=zeros(trial_num,length(bpm));
+rt1=zeros(trial_num,length(bpm));
 path_all=cell(trial_num,length(bpm));
-mark_all=cell(trial_num,length(bpm));
+time_all=cell(trial_num,length(bpm));
 loop_num=zeros(trial_num,length(bpm));
 lag=0.08;
 t0=GetSecs;
@@ -126,6 +122,7 @@ for w=1:length(bpm)
     Screen('FrameRect', window,[0 0 0], [0.2*rect(3),0.7*rect(4)-penwidth,0.8*rect(3),0.73*rect(4)+penwidth],2);
     Screen('Flip',window);
     t0=GetSecs;
+    
     for i=1: prepare_beep_num
         Screen('DrawTexture', window, imageDisplay8, [], [],0);
         Screen('FrameRect', window,[0 0 0], [0.2*rect(3),0.7*rect(4)-penwidth,0.8*rect(3),0.73*rect(4)+penwidth],2);
@@ -133,15 +130,13 @@ for w=1:length(bpm)
         Screen('Flip',window,t0+i*interval,0);   
     end
     disp(['Prepare epoch finished.'])
+    WaitSecs(2.0);%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
     for j=1:trial_num
         labSend([j,10], 2); % ready 5 + gate 5
         WaitSecs(lag);
         % trial parameter
-        rt=nan;
         path=zeros(10000,1);
         time=zeros(10000,1);
-        current_cursor=start(1);
-        last_cursor=start(1);
         t0=GetSecs;
         i=1;
         Screen('DrawTexture', window, imageDisplay, [], [],0);
@@ -153,14 +148,14 @@ for w=1:length(bpm)
         Screen('DrawTexture', window, imageDisplay, [], [],0);
         Screen('DrawTexture', window, imageDisplay_cursor, [], [start(1),cursor_height,start(1)+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
         Screen('DrawTexture', window, imageDisplay_ready, [], [symbol_pos,symbol_pos+symbol_size],0);
-        Screen('Flip',window,t0+i*interval)
+        Screen('Flip',window,t0+i*interval);
         % peep one times for yellow 
          i=i+1;
         Screen('DrawTexture', window, imageDisplay, [], [],0);
         Screen('DrawTexture', window, imageDisplay_cursor, [], [start(1),cursor_height,start(1)+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
         Screen('DrawTexture', window, imageDisplay_go, [], [symbol_pos,symbol_pos+symbol_size],0);
-        rt0=Screen('Flip',window,t0+i*interval);
-        while GetSecs-rt0<interval*5
+        rt0(j,w)=Screen('Flip',window,t0+i*interval);
+        while GetSecs-rt0(j,w)<interval*5
             loop_num(j,w)=loop_num(j,w)+1;
             [~,NumBuf]=calllib('USB_DAQ_DLL_V42','AD_continu_V42',1,0, NumSamp,FrqSamp,NumBuf);%AD_continu_V42(int mod_in,int chan, int Num_Sample,int Rate_Sample,short  *databuf);
             force=mean(NumBuf);
@@ -177,8 +172,8 @@ for w=1:length(bpm)
             path(i)=current_cursor; 
             time(i)=GetSecs;
             i=i+1;
-            if GetSecs-rt0>4*interval && current_cursor>gate(4,1)% end of the trial
-                rt=GetSecs-rt0;
+            if GetSecs-rt0(j,w)>4*interval && current_cursor>gate(4,1)% end of the trial
+                rt1(j,w)=GetSecs;
                 Screen('DrawTexture', window, imageDisplay, [], [],0);
                 Screen('DrawTexture', window, imageDisplay_stop, [], [symbol_pos,symbol_pos+symbol_size],0);
                 Screen('DrawTexture', window, imageDisplay_cursor, [], [ gate(4,1),cursor_height, gate(4,1)+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
@@ -186,12 +181,14 @@ for w=1:length(bpm)
                 break
             end
         end
-        WaitSecs(1.5);
-        [acc,path,mark,shoot] = evaluate_acc(path,time,rt0,interval,gate,whichgate);
+        
+        [acc,path,time,shoot]=evaluate_acc(path,time,base,ans_gate,rt0(j,w),interval);
+        time_all{j,w}=time;
         acc_all{j,w}=acc;
-        rt_all(j,w)=rt;
+        rt_all(j,w)=rt1(j,w)-rt0(j,w);
         path_all{j,w}=path;
-        mark_all{j,w}=mark;
+        WaitSecs(1.5-GetSecs+rt1(j,w));
+        
         Screen('DrawTexture', window, imageDisplay, [], [],0);
         for i=1:4
             if acc(i)==1
@@ -214,7 +211,7 @@ for w=1:length(bpm)
 end
 cd data
 filename=['outcome' subinfo{1} '.mat'];
-save(filename,'acc_all','rt_all','path_all');
+save(filename,'acc_all','rt_all','path_all','time_all','rt0','rt1','time_all');
 disp(['Successfully saved!'])
 cd ..         
 Screen('Closeall')
