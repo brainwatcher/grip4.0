@@ -1,8 +1,8 @@
-function [t0,rect] = f1(subinfo)
+function [t0,rect] = f1_practice(subinfo)
 %% important parameter
-trial_num=3;
+trial_num=5;
 %  bpm=[30 , 100, 38, 90, 60, 24, 75, 45, 110];
-bpm = [60];
+ bpm = [60];
  lag=0.1;
 %% prepare for screen
 root=pwd;
@@ -211,7 +211,7 @@ for w=1:length(bpm)
     end
 end
 cd data
-filename=['outcome' subinfo{1} '.mat'];
+filename=['outcome' subinfo{1} '_practice.mat'];
 save(filename,'acc_all','rt_all','path_all','time_all','rt0','rt1','time_all','bpm','cursor_size');
 disp(['Successfully saved!'])
 cd ..         

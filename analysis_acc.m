@@ -1,11 +1,11 @@
-function[acc,pks,locs,path,time,shoot]=analysis_acc(subinfonum,block,trial_num)
+function[acc,pks,locs,path,time,shoot,ans_gate,gate,ratio]=analysis_acc(subinfonum,block,trial_num)
 cd data
 S=load(['outcome' num2str(subinfonum) '.mat']);
 cd ..
 rt0=S.rt0(trial_num,block);
 path=S.path_all{trial_num,block};
 time=S.time_all{trial_num,block};
-interval=60/100;
+interval=60/S.bpm(block);
 cd preparation
 back=imread('back.bmp');
 B=load('back.mat');
@@ -16,6 +16,8 @@ rect=[0,0,width,height];
 ratio=min(rect(3)/size(back,2),rect(4)/size(back,1));
 gate=B.gate0*ratio;
 base=(2*B.home0(2)-B.home0(1))*ratio;
+S.cursor_size=25;
+gate(:,2)=gate(:,2)-S.cursor_size;
 seq=[4,1,3,5,2];% gate sequence
 [~,~,whichgate]=intersect([1,2,3,4,5],seq);
 % [acc,path,mark,shoot] = evaluate_acc(path,time,rt0,interval,gate,whichgate)
