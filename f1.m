@@ -1,8 +1,9 @@
 function [t0,rect] = f1(subinfo)
+try
 %% important parameter
 trial_num=3;
 %  bpm=[30 , 100, 38, 90, 60, 24, 75, 45, 110];
-bpm = [60];
+bpm = [90,110];
  lag=0.1;
 %% prepare for screen
 root=pwd;
@@ -220,5 +221,23 @@ ListenChar;
 ShowCursor;
 sca;
 unloadlibrary( 'USB_DAQ_DLL_V42');
+catch ErrorInfo
+    disp(ErrorInfo);
+    disp(ErrorInfo.identifier);
+    disp(ErrorInfo.message);
+    disp(ErrorInfo.stack);
+    disp(ErrorInfo.cause);    
+cd data
+filename=['outcome_EM' subinfo{1} '.mat'];
+save(filename,'acc_all','rt_all','path_all','time_all','rt0','rt1','time_all','bpm','cursor_size','ErrorInfo');
+disp(['Emergency saved!!!'])
+cd ..         
+Screen('Closeall')
+ListenChar;
+ShowCursor;
+sca;
+unloadlibrary( 'USB_DAQ_DLL_V42');
+end
+    
 end
 

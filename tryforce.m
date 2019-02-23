@@ -1,4 +1,5 @@
 function tryforce
+try
 cd preparation
 loadlibrary('USB_DAQ_DLL_V42','USB_DAQ_DLL_V42');
 calllib('USB_DAQ_DLL_V42','OpenUsb_V42');
@@ -43,6 +44,15 @@ end
 calllib('USB_DAQ_DLL_V42','CloseUsb_V42');
 unloadlibrary( 'USB_DAQ_DLL_V42');
 WaitSecs(2);
+close(h)
+catch ErrorInfo
+    disp(ErrorInfo);
+    disp(ErrorInfo.identifier);
+    disp(ErrorInfo.message);
+    disp(ErrorInfo.stack);
+    disp(ErrorInfo.cause); 
+    calllib('USB_DAQ_DLL_V42','CloseUsb_V42');
+unloadlibrary( 'USB_DAQ_DLL_V42');
 close(h)
 end
 
