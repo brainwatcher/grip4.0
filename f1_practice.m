@@ -48,9 +48,9 @@ seq=[4,1,3,5,2];% gate sequence
 [~,~,whichgate]=intersect([1,2,3,4,5],seq);
 ans_gate=gate(whichgate,:);
 imageDisplay_result=zeros(1,4);
-shoot_color=[237,28,36;46,49,146;0,111,59;91,155,213];
+shoot_color=[237,28,36;46,49,146;0,111,59;91,155,213;140,198,63];
 shoot_img=zeros(cursor_size,cursor_size,3);
-for i=1:4
+for i=1:5
     for j=1:3
         shoot_img(:,:,j)=shoot_color(i,j);
     end
@@ -75,12 +75,12 @@ symbol_img(:,:,3)=0;
 imageDisplay_ready=Screen('MakeTexture', window, symbol_img);
 symbol_pos=[0.6*rect(3),(rect(4)+size(back_img,1))*0.5-2*symbol_size];
 %% feed back
-right_img=imresize(right,50/max(size(right)));
-wrong_img=imresize(wrong,50/max(size(wrong))); 
+right_img=imresize(right,50/rect(3)*size(back_img,2)/max(size(right)));
+wrong_img=imresize(wrong,50/rect(3)*size(back_img,2)/max(size(wrong)));
 imageDisplay_right=Screen('MakeTexture', window, right_img);
 imageDisplay_wrong=Screen('MakeTexture', window, wrong_img);
-feed_back_height=0.5*(rect(4)-size(back_img,1))-50;
-feed_back_pos=mean(gate,2);
+feed_back_height=0.5*(rect(4)-size(back_img,1))-50/rect(3)*size(back_img,2);
+feed_back_pos=mean(gate,2)+cursor_size/2-size(right_img,2)/2;
 %% relax
 relax_img=imresize(relax,min(rect(3)/size(relax,2),rect(4)/size(relax,1)));
 imageDisplay7=Screen('MakeTexture', window, relax_img);
@@ -173,7 +173,7 @@ for w=1:length(bpm)
             path(i)=current_cursor; 
             time(i)=GetSecs;
             i=i+1;
-            if GetSecs-rt0(j,w)>4*interval && current_cursor>gate(4,1)% end of the trial
+            if GetSecs-rt0(j,w)>4.5*interval && current_cursor>gate(4,1)% end of the trial
                 rt1(j,w)=GetSecs;
                 Screen('DrawTexture', window, imageDisplay, [], [],0);
                 Screen('DrawTexture', window, imageDisplay_stop, [], [symbol_pos,symbol_pos+symbol_size],0);
@@ -191,7 +191,7 @@ for w=1:length(bpm)
         WaitSecs(1.5-GetSecs+rt1(j,w));
         
         Screen('DrawTexture', window, imageDisplay, [], [],0);
-        for i=1:4
+        for i=1:5
             if acc(i)==1
                 Screen('DrawTexture', window, imageDisplay_right, [], [feed_back_pos(whichgate(i)),feed_back_height,feed_back_pos(whichgate(i))+size(right_img,1),feed_back_height+size(right_img,2)],0);
             else

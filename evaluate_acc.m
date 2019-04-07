@@ -27,7 +27,6 @@ end
 %% find local maxima in path
 [pks,locs] = findpeaks(path);
 %% get the shoot bin
-mark=zeros(size(path));
 mark=path>base;
 mark1=diff([0,mark']);
 shoot_on=find(mark1==1);
@@ -55,6 +54,7 @@ for i=1:5
     else
         bin_inter{i}=[];
         k{i}=[];
+    end
 end
 %% judge there is any maxima exactly in the gate
 acc=zeros(1,5);
