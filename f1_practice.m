@@ -173,7 +173,7 @@ for w=1:length(bpm)
             path(i)=current_cursor; 
             time(i)=GetSecs;
             i=i+1;
-            if GetSecs-rt0(j,w)>4.5*interval && current_cursor>gate(4,1)% end of the trial
+            if GetSecs-rt0(j,w)>4*interval && current_cursor>gate(4,1)% end of the trial
                 rt1(j,w)=GetSecs;
                 Screen('DrawTexture', window, imageDisplay, [], [],0);
                 Screen('DrawTexture', window, imageDisplay_stop, [], [symbol_pos,symbol_pos+symbol_size],0);
