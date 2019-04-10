@@ -2,7 +2,7 @@ function [t0,rect,acc] = f1(subinfo)
 %%
  try
     %% important parameter
-    trial_num=3;
+    trial_num=2;
     %  bpm=[30 , 100, 38, 90, 60, 24, 75, 45, 110];
     bpm = [90,110];
     lag=0.1;
@@ -207,7 +207,6 @@ function [t0,rect,acc] = f1(subinfo)
             Screen('Flip',window);
             %         feedback_beep_num=max(fix(feedback_time/interval),1);
             WaitSecs(feedback_time);
-            wait4space;
         end
         if w<length(bpm)
             Screen('DrawTexture', window, imageDisplay7, [], [],0);
