@@ -4,7 +4,7 @@ function [t0,rect,acc] = f1(subinfo)
     %% important parameter
     trial_num=2;
     %  bpm=[30 , 100, 38, 90, 60, 24, 75, 45, 110];
-    bpm = [90,110];
+    bpm = [110,100];
     lag=0.1;
     %% prepare for screen
     root=pwd;
@@ -160,7 +160,7 @@ function [t0,rect,acc] = f1(subinfo)
             Screen('DrawTexture', window, imageDisplay_cursor, [], [start(1),cursor_height,start(1)+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
             Screen('DrawTexture', window, imageDisplay_go, [], [symbol_pos,symbol_pos+symbol_size],0);
             rt0(j,w)=Screen('Flip',window,t0+i*interval);
-            while GetSecs-rt0(j,w)<interval*5
+            while GetSecs-rt0(j,w)<interval*5.5 % Note max time 5 to 6
                 loop_num(j,w)=loop_num(j,w)+1;
                 [~,NumBuf]=calllib('USB_DAQ_DLL_V42','AD_continu_V42',1,0, NumSamp,FrqSamp,NumBuf);%AD_continu_V42(int mod_in,int chan, int Num_Sample,int Rate_Sample,short  *databuf);
                 force=mean(NumBuf);
@@ -177,7 +177,7 @@ function [t0,rect,acc] = f1(subinfo)
                 path(i)=current_cursor;
                 time(i)=GetSecs;
                 i=i+1;
-                if GetSecs-rt0(j,w)>4*interval && current_cursor>gate(4,1)% end of the trial ;
+                if GetSecs-rt0(j,w)>4*interval && current_cursor>gate(4,1)% end of the trial ;% note the 4 to 4.5
                     rt1(j,w)=GetSecs;
                     Screen('DrawTexture', window, imageDisplay, [], [],0);
                     Screen('DrawTexture', window, imageDisplay_stop, [], [symbol_pos,symbol_pos+symbol_size],0);
@@ -185,6 +185,9 @@ function [t0,rect,acc] = f1(subinfo)
                     Screen('Flip',window)
                     break
                 end
+            end
+            if rt1(j,w)==0
+                rt1(j,w)=GetSecs;
             end
             disp(['trial ' num2str(j) ' acc evaluation begin']);
             [acc,path,time,shoot]=evaluate_acc(path,time,base,ans_gate,rt0(j,w),interval);
@@ -206,17 +209,18 @@ function [t0,rect,acc] = f1(subinfo)
             Screen('DrawTexture', window, imageDisplay_stop, [], [symbol_pos,symbol_pos+symbol_size],0);
             Screen('Flip',window);
             %         feedback_beep_num=max(fix(feedback_time/interval),1);
-            WaitSecs(feedback_time);
+            wait4press;
         end
         if w<length(bpm)
             Screen('DrawTexture', window, imageDisplay7, [], [],0);
             Screen('Flip',window);
+            WaitSecs(1);
             wait4space;
         end
     end
-    cd data
+    cd data 
     filename=['outcome' subinfo{1} '.mat'];
-    save(filename,'acc_all','rt_all','path_all','time_all','rt0','rt1','time_all','bpm','cursor_size');
+    save(filename,'acc_all','rt_all','path_all','time_all','rt0','rt1','time_all','bpm','cursor_size','ans_gate','base');
     disp(['Successfully saved!'])
     cd ..
     Screen('Closeall')
@@ -232,7 +236,7 @@ catch ErrorInfo
     disp(ErrorInfo.cause);
     cd data
     filename=['outcome_EM' subinfo{1} '.mat'];
-    save(filename,'acc_all','rt_all','path_all','time_all','rt0','rt1','time_all','bpm','cursor_size','ErrorInfo');
+    save(filename);
     disp(['Emergency saved!!!'])
     cd ..
     Screen('Closeall')

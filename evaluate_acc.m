@@ -1,5 +1,6 @@
 function[acc,path,time,shoot]=evaluate_acc(path,time,base,ans_gate,rt0,interval)
 %%
+% Screen('Closeall')
 path(time==0)=[];
 time(time==0)=[];
 %% exactly time marker
@@ -10,14 +11,15 @@ for i=1:numel(label)
 end
 %% define time_bin for check acc
 
-% a=[0:4]';
+% a=[0:5]';
 % bin_eff=[a-0.5,a+1.5];
 % bin_eff(bin_eff<0)=0;
 % bin_eff(bin_eff>5)=5;
-adjust=0.05;
-bin_eff=[0,1.5;0.5,2.5;1.5,3.5;2.5,4.5;3.5,5];
-bin_eff(2:end,1)=bin_eff(2:end,1)+adjust;
-bin_eff(1:end-1,2)=bin_eff(1:end-1,2)-adjust;
+adjust_up=0.4;
+adjust_down=0;
+bin_eff=[0,1.5;0.5,2.5;1.5,3.5;2.5,4.5;3.5,5.5];
+bin_eff(2:end,1)=bin_eff(2:end,1)+adjust_up;
+bin_eff(1:end-1,2)=bin_eff(1:end-1,2)+adjust_down;
 time_bound=rt0+bin_eff*interval;
 bin=zeros(size(time_bound));
 for i=1:numel(bin)   
@@ -69,6 +71,9 @@ end
 if ~isempty(k{5})
     [shoot(5),shoot_idx(5)]=max(pks(k{5}));
     acc(5)=any(shoot(5)>ans_gate(5,1));
+    if shoot(5)>ans_gate(5,1)
+        shoot(5)=ans_gate(5,1);
+    end
 end
 %% plot
 % figure; 
@@ -83,11 +88,11 @@ end
 % for i=1:size(bin,1)
 %     line(repmat(bin(i,:),2,1), repmat([0 max(ans_gate(:))],2,1)','Color',shoot_color(i,:)/255,'LineStyle','--');
 % end
-% for i=1:size(gate,1)-1 
+% for i=1:size(ans_gate,1)-1 
 %     line(repmat(bin(i,:),2,1)', repmat(ans_gate(i,:),2,1),'Color',shoot_color(i,:)/255,'LineStyle','--'); 
 % end
 % line(bin(5,:), repmat(ans_gate(5,1),2,1),'Color','black','LineStyle','--'); 
-
+% 
 end
 
         

@@ -37,7 +37,7 @@ end
 % bin_eff(bin_eff<0)=0;
 % bin_eff(bin_eff>5)=5;
 adjust=0.05;
-bin_eff=[0,1.5;0.5,2.5;1.5,3.5;2.5,4.5;3.5,5];
+bin_eff=[0,1.5;0.5,2.5;1.5,3.5;2.5,4.5;3.5,5.5];
 bin_eff(2:end,1)=bin_eff(2:end,1)+adjust;
 bin_eff(1:end-1,2)=bin_eff(1:end-1,2)-adjust;
 time_bound=rt0+bin_eff*interval;
@@ -92,6 +92,9 @@ end
 if ~isempty(k{5})
     [shoot(5),shoot_idx(5)]=max(pks(k{5}));
     acc(5)=any(shoot(5)>ans_gate(5,1));
+    if shoot(5)>ans_gate(5,1)
+        shoot(5)=ans_gate(5,1);
+    end
 end
 %% plot
 figure; 
