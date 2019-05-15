@@ -4,6 +4,7 @@ trial_num=5;
 %  bpm=[30 , 100, 38, 90, 60, 24, 75, 45, 110];
 bpm = [60];
 lag=0.1;
+wait_time=2;
 %% prepare for screen
 root=pwd;
 cd(root);
@@ -194,18 +195,23 @@ for w=1:length(bpm)
         WaitSecs(1.5-GetSecs+rt1(j,w));
         
         Screen('DrawTexture', window, imageDisplay, [], [],0);
-        for i=1:5
+        for i=1:5 %% note: change 1:4 to 1:5
             if acc(i)==1
-                Screen('DrawTexture', window, imageDisplay_right, [], [feed_back_pos(whichgate(i)),feed_back_height,feed_back_pos(whichgate(i))+size(right_img,1),feed_back_height+size(right_img,2)],0);
+                Screen('DrawTexture', window, imageDisplay_right, [], [feed_back_pos(whichgate(i)),feed_back_height,feed_back_pos(whichgate(i))+size(right_img,2),feed_back_height+size(right_img,1)],0);
             else
-                Screen('DrawTexture', window, imageDisplay_wrong, [], [feed_back_pos(whichgate(i)),feed_back_height,feed_back_pos(whichgate(i))+size(wrong_img,1),feed_back_height+size(wrong_img,2)],0);
+                Screen('DrawTexture', window, imageDisplay_wrong, [], [feed_back_pos(whichgate(i)),feed_back_height,feed_back_pos(whichgate(i))+size(wrong_img,2),feed_back_height+size(wrong_img,1)],0);
             end
-            Screen('DrawTexture', window, imageDisplay_result(i), [], [shoot(i),cursor_height, shoot(i)+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
+            if i<5
+                Screen('DrawTexture', window, imageDisplay_result(i), [], [shoot(i),cursor_height, shoot(i)+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
+            else
+                if acc(i)==0
+                    Screen('DrawTexture', window, imageDisplay_result(i), [], [shoot(i),cursor_height, shoot(i)+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
+                end
+            end
         end
         Screen('DrawTexture', window, imageDisplay_stop, [], [symbol_pos,symbol_pos+symbol_size],0);
         Screen('Flip',window);
-        %         feedback_beep_num=max(fix(feedback_time/interval),1);
-        wait4press;
+        WaitSecs(wait_time);
     end
     if w<length(bpm)
         Screen('DrawTexture', window, imageDisplay7, [], [],0);
