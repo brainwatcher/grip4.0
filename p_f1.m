@@ -1,4 +1,4 @@
-function [t0,rect] = f1_practice(subinfo)
+function [t0,rect] = p_f1(subinfo)
 %% important parameter
 trial_num=5;
 %  bpm=[30 , 100, 38, 90, 60, 24, 75, 45, 110];

@@ -1,3 +1,3 @@
 pmode start local 2 % 
-subinfo=getsubinfo();  
+subinfo=p_getsubinfo();  
 pmode client2lab subinfo 1
