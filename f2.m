@@ -19,7 +19,7 @@ for w=1:length(bpm)
     for i=1:result(2)
         [t0,~] = soundbeep(t0,interval,S.y,S.Fs);
     end
-    for j=1:trial_num
+    for j=1:trial_num(w)
         result = labReceive(1);
         t0=GetSecs;
         for i=1:result(2)

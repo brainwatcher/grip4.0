@@ -1,8 +1,10 @@
 function [t0,rect] = p_f1(subinfo)
 %% important parameter
-trial_num=5;
+trial_num_per_block=2;
 %  bpm=[30 , 100, 38, 90, 60, 24, 75, 45, 110];
-bpm = [60];
+bpm = [30,60];
+block=size(bpm,2);
+trial_num=trial_num_per_block*ones(1,block);
 lag=0.1;
 wait_time=2;
 %% prepare for screen
@@ -102,16 +104,15 @@ NumSamp=1024;
 NumBuf=1.0:NumSamp;
 penwidth=2;
 prepare_time=2;
-feedback_time=2;
 Screen('DrawTexture', window, imageDisplay8, [], [],0);
 Screen('Flip',window)
-acc_all=cell(trial_num,length(bpm));
-rt_all=zeros(trial_num,length(bpm));
-rt0=zeros(trial_num,length(bpm));
-rt1=zeros(trial_num,length(bpm));
-path_all=cell(trial_num,length(bpm));
-time_all=cell(trial_num,length(bpm));
-loop_num=zeros(trial_num,length(bpm));
+acc_all=cell(1,block);
+rt_all=cell(1,block);
+rt0=cell(1,block);
+rt1=cell(1,block);
+path_all=cell(1,block);
+time_all=cell(1,block);
+loop_num=cell(1,block);
 
 t0=GetSecs;
 labSend({bpm,trial_num}, 2);
@@ -221,7 +222,7 @@ for w=1:length(bpm)
     end
 end
 cd data
-filename=['outcome' subinfo{1} '_practice.mat'];
+filename=['p_' subinfo{1} '.mat'];
 save(filename,'acc_all','rt_all','path_all','time_all','rt0','rt1','time_all','bpm','cursor_size');
 disp(['Successfully saved!'])
 cd ..

@@ -1,5 +1,5 @@
 %%
-% try
+ try
     %% important parameter
     trial_num=[3,2];
     block=length(trial_num);
@@ -38,7 +38,7 @@
     back_img=imresize(back,ratio);
     imageDisplay=Screen('MakeTexture', window, back_img);
     gate=B.gate0*ratio;% zoomed gate position
-    base=(3*B.home0(2)-B.home0(1))*ratio;% shoot base threshold
+    base=(2*B.home0(2)-B.home0(1))*ratio;% shoot base threshold
     start=B.home0*ratio;% zoomed home position
     %% cursor
     cursor_size=25;
@@ -107,7 +107,6 @@
     NumBuf=1.0:NumSamp;
     penwidth=2;
     prepare_time=2;
-    feedback_time=2;
     Screen('DrawTexture', window, imageDisplay8, [], [],0);
     Screen('Flip',window)
     acc_all=cell(1,block);
@@ -120,12 +119,12 @@
     max_time=15;
     for w=1:block
         acc_all{w}=cell(1,trial_num(w));
-        rt_all{w}=cell(1,trial_num(w));
-        rt0{w}=cell(1,trial_num(w));
-        rt1{w}=cell(1,trial_num(w));
+        rt_all{w}=nan(1,trial_num(w));
+        rt0{w}=nan(1,trial_num(w));
+        rt1{w}=nan(1,trial_num(w));
         path_all{w}=cell(1,trial_num(w));
         time_all{w}=cell(1,trial_num(w));
-        loop_num{w}=cell(1,trial_num(w));
+        loop_num{w}=zeros(1,trial_num(w));
         disp(['train ' num2str(w) ' begin']);
         wait4press;
         for j=1:trial_num(w)
@@ -149,9 +148,10 @@
             Screen('DrawTexture', window, imageDisplay, [], [],0);
             Screen('DrawTexture', window, imageDisplay_cursor, [], [start(1),cursor_height,start(1)+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
             Screen('DrawTexture', window, imageDisplay_go, [], [symbol_pos,symbol_pos+symbol_size],0);
-            rt0{w}{j}=Screen('Flip',window);
-            while GetSecs-rt0{w}{j}<max_time % the duration of no-response trial
-                loop_num{w}{j}=loop_num{w}{j}+1;
+            rt0{w}(j)=Screen('Flip',window);
+            ii=0;
+            while GetSecs-rt0{w}(j)<max_time % the duration of no-response trial
+                ii=ii+1;
                 [~,NumBuf]=calllib('USB_DAQ_DLL_V42','AD_continu_V42',1,0, NumSamp,FrqSamp,NumBuf);%AD_continu_V42(int mod_in,int chan, int Num_Sample,int Rate_Sample,short  *databuf);
                 force=mean(NumBuf);
                 current_cursor=getloc(force);
@@ -164,35 +164,35 @@
                 Screen('DrawTexture', window, imageDisplay_go, [], [symbol_pos,symbol_pos+symbol_size],0);
                 Screen('DrawTexture', window, imageDisplay_cursor, [], [current_cursor,cursor_height, current_cursor+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
                 Screen('Flip',window);
-                path(i)=current_cursor;
-                time(i)=GetSecs;
+                path(ii)=current_cursor;
+                time(ii)=GetSecs;
                 shoot_time=gate_count(path,time,base);% the time of shoot
-                i=i+1;
                 if  current_cursor>gate(4,1)&& shoot_time==5% end of the trial ;% note the 4 to 4.5
-                    rt1{w}{j}=GetSecs;
+                    rt1{w}(j)=GetSecs;
                     Screen('DrawTexture', window, imageDisplay, [], [],0);
                     Screen('DrawTexture', window, imageDisplay_stop, [], [symbol_pos,symbol_pos+symbol_size],0);
                     Screen('DrawTexture', window, imageDisplay_cursor, [], [ gate(4,1),cursor_height, gate(4,1)+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
                     Screen('Flip',window)
                     break
                 elseif shoot_time>5
-                    rt1{w}{j}=GetSecs;
+                    rt1{w}(j)=GetSecs;
                     Screen('DrawTexture', window, imageDisplay, [], [],0);
                     Screen('DrawTexture', window, imageDisplay_stop, [], [symbol_pos,symbol_pos+symbol_size],0)
                     Screen('Flip',window)
                     break
                 end
             end
-            if isempty(rt1{w}{j})
-                error('Not setting trial end time!');
+            loop_num{w}(j)=ii;
+            if isnan(rt1{w}(j))
+                rt1{w}(j)=max_time+rt0{w}(j);
             end
             disp(['trial ' num2str(j) ' acc evaluation begin']);
             [acc,path,time,shoot] = t_evaluate_acc(path,time,ans_gate,base);
             time_all{w}{j}=time;
             acc_all{w}{j}=acc;
-            rt_all{w}{j}=rt1{w}{j}-rt0{w}{j};
+            rt_all{w}(j)=rt1{w}(j)-rt0{w}(j);
             path_all{w}{j}=path;
-            WaitSecs(1.5-GetSecs+rt1{w}{j});
+            WaitSecs(1.5-GetSecs+rt1{w}(j));
             Screen('DrawTexture', window, imageDisplay, [], [],0);
             %%
             for i=1:5 %% note: change 1:4 to 1:5
@@ -213,18 +213,18 @@
             Screen('Flip',window);
             WaitSecs(wait_time);
         end
-        if w<length(trial_num)
+        if w<block
             Screen('DrawTexture', window, imageDisplay7, [], [],0);
         else
             Screen('DrawTexture', window, imageDisplay9, [], [],0);
         end
         Screen('Flip',window);
         WaitSecs(1);
-        wait4press;
     end
+    wait4press;
     cd data
-    filename=['train' subinfo{1} '_sess' subinfo{2} '.mat'];
-    save(filename,'acc_all','rt_all','path_all','time_all','rt0','rt1','time_all','bpm','cursor_size','ans_gate','base');
+    filename=['t_' subinfo{1} '_' subinfo{2} '.mat'];
+    save(filename,'acc_all','rt_all','path_all','time_all','rt0','rt1','cursor_size','ans_gate','base','loop_num');
     disp(['Successfully saved train data!'])
     cd ..
     Screen('Closeall')
@@ -232,24 +232,23 @@
     ShowCursor;
     sca;
     unloadlibrary( 'USB_DAQ_DLL_V42');
-% catch ErrorInfo
-%     disp(ErrorInfo);
-%     disp(ErrorInfo.identifier);
-%     disp(ErrorInfo.message);
-%     disp(ErrorInfo.stack);
-%     disp(ErrorInfo.cause);
-%     cd data
-%     filename=['t_EM' subinfo{1} '_s' subinfo{2} '.mat'];
-%     save(filename);
-%     disp(['Emergency saved!!!'])
-%     cd ..
-%     Screen('Closeall')
-%     ListenChar;
-%     ShowCursor;
-%     sca;
-%     unloadlibrary( 'USB_DAQ_DLL_V42');
-%     rethrow( ErrorInfo)
-% end
+catch ErrorInfo
+    disp(ErrorInfo);
+    disp(ErrorInfo.identifier);
+    disp(ErrorInfo.message);
+    disp(ErrorInfo.stack);
+    disp(ErrorInfo.cause);
+    cd data
+    filename=['t_' subinfo{1} '_' subinfo{2} 'EM.mat'];
+    save(filename);
+    disp('Emergency saved during Training!');
+    cd ..
+    Screen('Closeall')
+    ListenChar;
+    ShowCursor;
+    sca;
+    unloadlibrary( 'USB_DAQ_DLL_V42');
+end
 
 
 

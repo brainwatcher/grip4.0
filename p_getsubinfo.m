@@ -1,4 +1,4 @@
-function subinfo=getsubinfo_practice()
+function subinfo=p_getsubinfo()
 prompt={'subject number','trails'};
 dlg_title='info';
 num_lines=1;

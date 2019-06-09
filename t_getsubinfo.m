@@ -1,4 +1,4 @@
-function subinfo=getsubinfo_train()
+function subinfo=t_getsubinfo()
 prompt={'subject number','session'};
 dlg_title='info';
 dims = [1 35;1 10];

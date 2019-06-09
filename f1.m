@@ -1,10 +1,20 @@
-function [t0,rect,acc] = m_f1(subinfo)
+function [t0,rect,acc] = f1(subinfo,trial_num_per_block,bpm,mode)
 %%
 try
     %% important parameter
-    trial_num=2;
+    %     trial_num_per_block=2;
     %  bpm=[30 , 100, 38, 90, 60, 24, 75, 45, 110];
-    bpm = [110,100];
+    %     bpm = [110,100];
+    block=size(bpm,2);
+    trial_num=trial_num_per_block*ones(1,block);
+    if mode==1
+        prefix='m_';
+    elseif mode==0
+        prefix='p_';
+    else
+        error('Not select practice or main test!')
+    end
+    
     lag=0.1;
     wait_time=2;
     %% prepare for screen
@@ -105,23 +115,31 @@ try
     NumBuf=1.0:NumSamp;
     penwidth=2;
     prepare_time=2;
-    feedback_time=2;
     Screen('DrawTexture', window, imageDisplay8, [], [],0);
     Screen('Flip',window)
-    acc_all=cell(trial_num,length(bpm));
-    rt_all=zeros(trial_num,length(bpm));
-    rt0=zeros(trial_num,length(bpm));
-    rt1=zeros(trial_num,length(bpm));
-    path_all=cell(trial_num,length(bpm));
-    time_all=cell(trial_num,length(bpm));
-    loop_num=zeros(trial_num,length(bpm));
+    acc_all=cell(1,block);
+    rt_all=cell(1,block);
+    rt0=cell(1,block);
+    rt1=cell(1,block);
+    path_all=cell(1,block);
+    time_all=cell(1,block);
+    loop_num=cell(1,block);
     
     t0=GetSecs;
     labSend({bpm,trial_num}, 2);
     for w=1:length(bpm)
+        acc_all{w}=cell(1,trial_num(w));
+        rt_all{w}=nan(1,trial_num(w));
+        rt0{w}=nan(1,trial_num(w));
+        rt1{w}=nan(1,trial_num(w));
+        path_all{w}=cell(1,trial_num(w));
+        time_all{w}=cell(1,trial_num(w));
+        loop_num{w}=zeros(1,trial_num(w));
         disp(['Block ' num2str(w) ' begin']);
         interval=60/bpm(w);
+        max_time=interval*5.5;
         prepare_beep_num=fix(prepare_time/interval)+1;
+        wait4press;
         labSend([0,prepare_beep_num], 2);
         WaitSecs(lag);
         Screen('DrawTexture', window, imageDisplay8, [], [],0);
@@ -160,9 +178,10 @@ try
             Screen('DrawTexture', window, imageDisplay, [], [],0);
             Screen('DrawTexture', window, imageDisplay_cursor, [], [start(1),cursor_height,start(1)+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
             Screen('DrawTexture', window, imageDisplay_go, [], [symbol_pos,symbol_pos+symbol_size],0);
-            rt0(j,w)=Screen('Flip',window,t0+i*interval);
-            while GetSecs-rt0(j,w)<interval*5.5 % Note max time 5 to 6
-                loop_num(j,w)=loop_num(j,w)+1;
+            rt0{w}(j)=Screen('Flip',window,t0+i*interval);
+            ii=0;
+            while GetSecs-rt0{w}(j)<max_time % Note max time 5 to 6
+                ii=ii+1;
                 [~,NumBuf]=calllib('USB_DAQ_DLL_V42','AD_continu_V42',1,0, NumSamp,FrqSamp,NumBuf);%AD_continu_V42(int mod_in,int chan, int Num_Sample,int Rate_Sample,short  *databuf);
                 force=mean(NumBuf);
                 current_cursor=getloc(force);
@@ -175,11 +194,10 @@ try
                 Screen('DrawTexture', window, imageDisplay_go, [], [symbol_pos,symbol_pos+symbol_size],0);
                 Screen('DrawTexture', window, imageDisplay_cursor, [], [current_cursor,cursor_height, current_cursor+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
                 Screen('Flip',window);
-                path(i)=current_cursor;
-                time(i)=GetSecs;
-                i=i+1;
-                if GetSecs-rt0(j,w)>4*interval && current_cursor>gate(4,1)% end of the trial ;% note the 4 to 4.5
-                    rt1(j,w)=GetSecs;
+                path(ii)=current_cursor;
+                time(ii)=GetSecs;
+                if GetSecs-rt0{w}(j)>4*interval && current_cursor>gate(4,1)% end of the trial ;% note the 4 to 4.5
+                    rt1{w}(j)=GetSecs;
                     Screen('DrawTexture', window, imageDisplay, [], [],0);
                     Screen('DrawTexture', window, imageDisplay_stop, [], [symbol_pos,symbol_pos+symbol_size],0);
                     Screen('DrawTexture', window, imageDisplay_cursor, [], [ gate(4,1),cursor_height, gate(4,1)+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
@@ -187,16 +205,17 @@ try
                     break
                 end
             end
-            if rt1(j,w)==0
-                rt1(j,w)=GetSecs;
+            loop_num{w}(j)=ii;
+            if isnan(rt1{w}(j))
+                rt1{w}(j)=max_time+rt0{w}(j);
             end
             disp(['trial ' num2str(j) ' acc evaluation begin']);
-            [acc,path,time,shoot]=evaluate_acc(path,time,base,ans_gate,rt0(j,w),interval);
-            time_all{j,w}=time;
-            acc_all{j,w}=acc;
-            rt_all(j,w)=rt1(j,w)-rt0(j,w);
-            path_all{j,w}=path;
-            WaitSecs(1.5-GetSecs+rt1(j,w));
+            [acc,path,time,shoot]=evaluate_acc(path,time,base,ans_gate,rt0{w}(j),interval);
+            time_all{w}{j}=time;
+            acc_all{w}{j}=acc;
+            rt_all{w}(j)=rt1{w}(j)-rt0{w}(j);
+            path_all{w}{j}=path;
+            WaitSecs(1.5-GetSecs+rt1{w}(j));
             Screen('DrawTexture', window, imageDisplay, [], [],0);
             %%
             for i=1:5 %% note: change 1:4 to 1:5
@@ -217,15 +236,15 @@ try
             Screen('Flip',window);
             WaitSecs(wait_time);
         end
-        if w<length(bpm)
+        if w<block
             Screen('DrawTexture', window, imageDisplay7, [], [],0);
             Screen('Flip',window);
             WaitSecs(1);
-            wait4space;
+            wait4press;
         end
     end
     cd data
-    filename=['outcome' subinfo{1} '.mat'];
+    filename=[prefix subinfo{1} '.mat'];
     save(filename,'acc_all','rt_all','path_all','time_all','rt0','rt1','time_all','bpm','cursor_size','ans_gate','base');
     disp(['Successfully saved!'])
     cd ..
@@ -241,9 +260,9 @@ catch ErrorInfo
     disp(ErrorInfo.stack);
     disp(ErrorInfo.cause);
     cd data
-    filename=['outcome_EM' subinfo{1} '.mat'];
+    filename=[prefix subinfo{1} '_EM.mat'];
     save(filename);
-    disp(['Emergency saved!!!'])
+    disp('Emergency saved during Main test! ');
     cd ..
     Screen('Closeall')
     ListenChar;

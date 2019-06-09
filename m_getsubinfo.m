@@ -1,4 +1,4 @@
-function subinfo=getsubinfo()
+function subinfo=m_getsubinfo()
 prompt={'subject number'};
 dlg_title='info';
 num_lines=1;
