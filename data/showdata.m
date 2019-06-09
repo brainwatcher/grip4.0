@@ -52,14 +52,14 @@ error_rate{i}=cellfun(@(x) 1-sum(x)/5,acc_all{i});
 rt_mean(i)=mean(rt{i});
 rt_sd(i)=std(rt{i});
 error_rate_mean(i)=mean(error_rate{i});
-error_rate_sd(i)=std(acc{i});
+error_rate_sd(i)=std(error_rate{i});
 end
 %%
 figure;
 set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.2 0.55 0.6 0.45]);
 subplot(121) % error rate VS block
 errorbar(1:length(error_rate_mean),error_rate_mean,error_rate_sd,'o','MarkerFaceColor',[0.5,0.5,0.5])
-axis([0 length(error_rate_mean)+1 0 max(error_rate_mean+error_rate_sd)*1.1])
+axis([0 length(error_rate_mean)+1 0 max(1,max(error_rate_mean+error_rate_sd)*1.1)])
 xlabel('Block')
 ylabel('Error rate (%)')
 set(gca,'XTick',1:length(error_rate_mean))

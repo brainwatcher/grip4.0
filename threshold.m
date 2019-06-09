@@ -2,7 +2,7 @@
 root=pwd;
 cd(root);
 Screen('Preference', 'SkipSyncTests', 1);
-subinfo=getsubinfo;
+subinfo=m_getsubinfo;
 window_screen=whichscreen;
 [window, rect] = Screen('Openwindow',window_screen,255);
 image_num=4;
