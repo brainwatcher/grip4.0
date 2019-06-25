@@ -1,31 +1,24 @@
 function[acc,path,time,shoot]=evaluate_acc(path,time,base,ans_gate,rt0,interval)
 %%
-% Screen('Closeall')
 path(time==0)=[];
 time(time==0)=[];
 %% exactly time marker
 label=rt0+(0:5)*interval;
 label_index=zeros(size(label));
-for i=1:numel(label)   
-[~, label_index(i)] = min(abs(time-label(i)));
+for i=1:numel(label)
+    [~, label_index(i)] = min(abs(time-label(i)));
 end
 %% define time_bin for check acc
-
-% a=[0:5]';
-% bin_eff=[a-0.5,a+1.5];
-% bin_eff(bin_eff<0)=0;
-% bin_eff(bin_eff>5)=5;
-adjust_up=0.4;
-adjust_down=0;
-bin_eff=[0,1.5;0.5,2.5;1.5,3.5;2.5,4.5;3.5,5.5];
-bin_eff(2:end,1)=bin_eff(2:end,1)+adjust_up;
-bin_eff(1:end-1,2)=bin_eff(1:end-1,2)+adjust_down;
-time_bound=rt0+bin_eff*interval;
-bin=zeros(size(time_bound));
-for i=1:numel(bin)   
-[~, bin(i)] = min(abs(time-time_bound(i)));
+ratio=0.2;
+bin=zeros(5,2);
+for i=1:5
+    bin(i,1)=ratio*label_index(i+1)+(1-ratio)*label_index(i);
+    if i<5
+        bin(i,2)=ratio*label_index(i+1)+(1-ratio)*label_index(i+2);
+    else
+        bin(i,2)=label_index(i+1);
+    end
 end
-
 %% find local maxima in path
 [pks,locs] = findpeaks(path);
 %% get the shoot bin
@@ -39,8 +32,6 @@ if length(shoot_on)-length(shoot_off)==1
     locs=[locs;length(mark)];
 end
 bin_shoot=[shoot_on;shoot_off]';
-
-
 %% allocate the maxima into bins
 k=cell(1,5);
 bin_inter=cell(1,5);
@@ -69,30 +60,12 @@ for i=1:4
     end
 end
 if ~isempty(k{5})
-    [shoot(5),shoot_idx(5)]=max(pks(k{5}));
+    shoot(5)=max(pks(k{5}));
     acc(5)=any(shoot(5)>ans_gate(5,1));
-    if shoot(5)>ans_gate(5,1)
+    if shoot(5)>=ans_gate(5,1)
         shoot(5)=ans_gate(5,1);
     end
 end
-%% plot
-% figure; 
-% shoot_color=[237,28,36;46,49,146;0,111,59;91,155,213;0,0,0];
-% plot(1:length(time),path,'-',label_index,zeros(1,length(label)),'r*',locs,pks,'k*') ;
-% hold on
-% for i=1:5
-%     if ~isempty(k{i})
-%         plot(locs(k{i}(shoot_idx(i))),shoot(i),'y*');
-%     end
-% end
-% for i=1:size(bin,1)
-%     line(repmat(bin(i,:),2,1), repmat([0 max(ans_gate(:))],2,1)','Color',shoot_color(i,:)/255,'LineStyle','--');
-% end
-% for i=1:size(ans_gate,1)-1 
-%     line(repmat(bin(i,:),2,1)', repmat(ans_gate(i,:),2,1),'Color',shoot_color(i,:)/255,'LineStyle','--'); 
-% end
-% line(bin(5,:), repmat(ans_gate(5,1),2,1),'Color','black','LineStyle','--'); 
-% 
 end
 
-        
+

@@ -156,7 +156,7 @@ try
         WaitSecs(2.0);%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
         for j=1:trial_num
             disp(['trial ' num2str(j) ' begin']);
-            labSend([j,10], 2); % ready 5 + gate 5
+            labSend([j,9], 2); % ready 5 + gate 5
             WaitSecs(lag);
             % trial parameter
             path=zeros(10000,1);
@@ -171,13 +171,13 @@ try
             i=i+3;
             Screen('DrawTexture', window, imageDisplay, [], [],0);
             Screen('DrawTexture', window, imageDisplay_cursor, [], [start(1),cursor_height,start(1)+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
-            Screen('DrawTexture', window, imageDisplay_ready, [], [symbol_pos,symbol_pos+symbol_size],0);
-            Screen('Flip',window,t0+i*interval);
-            % peep one times for yellow
-            i=i+1;
-            Screen('DrawTexture', window, imageDisplay, [], [],0);
-            Screen('DrawTexture', window, imageDisplay_cursor, [], [start(1),cursor_height,start(1)+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
             Screen('DrawTexture', window, imageDisplay_go, [], [symbol_pos,symbol_pos+symbol_size],0);
+%             Screen('Flip',window,t0+i*interval);
+%             % peep one times for yellow
+%             i=i+1;
+%             Screen('DrawTexture', window, imageDisplay, [], [],0);
+%             Screen('DrawTexture', window, imageDisplay_cursor, [], [start(1),cursor_height,start(1)+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
+%             Screen('DrawTexture', window, imageDisplay_go,[], [symbol_pos,symbol_pos+symbol_size],0);
             rt0{w}(j)=Screen('Flip',window,t0+i*interval);
             ii=0;
             while GetSecs-rt0{w}(j)<max_time % Note max time 5 to 6
