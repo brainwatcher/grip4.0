@@ -1,10 +1,11 @@
 %% load data
-subinfo='000';
+cdgrip;
+subinfo='001';
 cd data
 S=load(['m_' num2str(subinfo) '.mat']);
 cd ..
 block=1;
-trial=1;
+trial=2;
 base=S.base;
 ans_gate=S.ans_gate;
 path=S.path_all{block}{trial};
@@ -14,6 +15,7 @@ rt1=S.rt1{block}(trial);
 bpm=S.bpm(block);
 interval=60/bpm;
 %%
+% (rt1-rt0)/interval
 path(time==0)=[];
 time(time==0)=[];
 %% exactly time marker
@@ -30,16 +32,21 @@ for i=1:5
     if i<5
         bin(i,2)=ratio*label_index(i+1)+(1-ratio)*label_index(i+2);
     else
-        bin(i,2)=label_index(i+1);
+        bin(i,2)=length(path);% gate 5 error
     end
 end
 %% find local maxima in path
 [pks,locs] = findpeaks(path);
 %% get the shoot bin
 mark=path>base;
+k=find(mark==0);
+initial=k(1);
+clear k
 mark1=diff([0,mark']);
 shoot_on=find(mark1==1);
+shoot_on(shoot_on<initial)=[];
 shoot_off=find(mark1==-1)-1;
+shoot_off(shoot_off<initial)=[];
 if length(shoot_on)-length(shoot_off)==1
     shoot_off=[shoot_off,length(mark)];
     pks=[pks;path(end)];
@@ -81,31 +88,37 @@ if ~isempty(k{5})
     end
 end
 %% plot
-figure;
 shoot_color=[237,28,36;46,49,146;0,111,59;91,155,213;0,0,0];
-plot(1:length(time),path,'-',label_index,zeros(1,length(label)),'r*',locs,pks,'k*',bin_shoot(:),zeros(1,numel(bin_shoot)),'g*') ;
+figure;
+plot(1:length(time),path,'-',label_index,zeros(1,length(label)),'r*',locs,pks,'k*') ;
+line(bin(5,:), repmat(ans_gate(5,1),2,1),'Color','black','LineStyle','--');
 hold on
-
 for i=1:size(bin,1)
     line(repmat(bin(i,:),2,1), repmat([0 max(ans_gate(:))],2,1)','Color',shoot_color(i,:)/255,'LineStyle','--');
 end
 for i=1:size(ans_gate,1)-1
     line(repmat(bin(i,:),2,1)', repmat(ans_gate(i,:),2,1),'Color',shoot_color(i,:)/255,'LineStyle','--');
 end
-line(bin(5,:), repmat(ans_gate(5,1),2,1),'Color','black','LineStyle','--');
+plot(1:length(time),base*ones(length(time),1),'k-')
 %%
 figure;
 hold on;
-plot(1:length(time),path,'-',label_index,zeros(1,length(label)),'r*',locs,pks,'k*');
+p1=plot(1:length(time),path,'-',label_index,zeros(1,length(label)),'r*',locs,pks,'k*');
+line(bin(5,:), repmat(ans_gate(5,1),2,1),'Color','black','LineStyle','--');
 for i=1:size(bin_inter,2)
-    line(repmat(bin_inter{i},2,1), repmat([0 max(ans_gate(:))],2,1)','Color',shoot_color(i,:)/255,'LineStyle','--');
+    if ~isempty(bin_inter{i})
+        line(repmat(bin_inter{i},2,1), repmat([0 max(ans_gate(:))],2,1)','Color',shoot_color(i,:)/255,'LineStyle','--');
+    end
 end
 for i=1:size(ans_gate,1)-1
-    line(repmat(bin_inter{i},2,1)', repmat(ans_gate(i,:),2,1),'Color',shoot_color(i,:)/255,'LineStyle','--');
+    if ~isempty(bin_inter{i})
+        line(repmat(bin_inter{i},2,1)', repmat(ans_gate(i,:),2,1),'Color',shoot_color(i,:)/255,'LineStyle','--');
+    end
 end
 for i=1:5
     if ~isempty(k{i})
-        plot(locs(k{i}(shoot_idx(i))),shoot(i),'y*');
+        p2=plot(locs(k{i}(shoot_idx(i))),shoot(i),'ko','MarkerFaceColor','y' );
     end
 end
+legend([p1(3),p2],{'the raw peak','the screened peak'})
 

@@ -23,9 +23,14 @@ end
 [pks,locs] = findpeaks(path);
 %% get the shoot bin
 mark=path>base;
+k=find(mark==0);
+initial=k(1);
+clear k
 mark1=diff([0,mark']);
 shoot_on=find(mark1==1);
+shoot_on(shoot_on<initial)=[];
 shoot_off=find(mark1==-1)-1;
+shoot_off(shoot_off<initial)=[];
 if length(shoot_on)-length(shoot_off)==1
     shoot_off=[shoot_off,length(mark)];
     pks=[pks;path(end)];

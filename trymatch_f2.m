@@ -1,8 +1,10 @@
 cd preparation
 S=load('metro.mat');
 cd ..
-[time,interval] = labReceive(1);
-t0=GetSecs;
+time = labReceive(1);
+interval=zeros(time,1);
 for i=1:time
-    [t0,~] = soundbeep(t0,interval,S.y,S.Fs);
+    interval(i) = labReceive(1);
+    t0=GetSecs;
+    soundbeep(t0,interval(i),S.y,S.Fs);
 end

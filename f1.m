@@ -1,10 +1,6 @@
 function [t0,rect,acc] = f1(subinfo,trial_num_per_block,bpm,mode)
 %%
 try
-    %% important parameter
-    %     trial_num_per_block=2;
-    %  bpm=[30 , 100, 38, 90, 60, 24, 75, 45, 110];
-    %     bpm = [110,100];
     block=size(bpm,2);
     trial_num=trial_num_per_block*ones(1,block);
     if mode==1
@@ -14,8 +10,10 @@ try
     else
         error('Not select practice or main test!')
     end
-    
-    lag=0.1;
+    cd data
+    S=load(['trymatch' subinfo{1} '.mat']);
+    cd ..
+    lag=S.lag0;
     wait_time=2;
     %% prepare for screen
     root=pwd;
@@ -82,10 +80,10 @@ try
     symbol_img(:,:,2)=255;
     symbol_img(:,:,3)=0;
     imageDisplay_go=Screen('MakeTexture', window, symbol_img);
-    symbol_img(:,:,1)=255 ;
-    symbol_img(:,:,2)=255;
-    symbol_img(:,:,3)=0;
-    imageDisplay_ready=Screen('MakeTexture', window, symbol_img);
+%     symbol_img(:,:,1)=255 ;
+%     symbol_img(:,:,2)=255;
+%     symbol_img(:,:,3)=0;
+%     imageDisplay_ready=Screen('MakeTexture', window, symbol_img);
     symbol_pos=[0.6*rect(3),(rect(4)+size(back_img,1))*0.5-2*symbol_size];
     %% feed back
     right_img=imresize(right,50/rect(3)*size(back_img,2)/max(size(right)));
@@ -152,7 +150,7 @@ try
             Screen('FillRect', window,[0 0 0], [0.2*rect(3),0.7*rect(4),0.2*rect(3)+0.6*rect(3)*i/prepare_beep_num,0.73*rect(4)]);
             Screen('Flip',window,t0+i*interval,0);
         end
-        disp(['Prepare epoch finished.'])
+        disp('Prepare epoch finished.')
         WaitSecs(2.0);%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
         for j=1:trial_num
             disp(['trial ' num2str(j) ' begin']);
