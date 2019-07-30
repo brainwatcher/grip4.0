@@ -2,20 +2,24 @@
 root=pwd;
 cd(root);
 Screen('Preference', 'SkipSyncTests', 1);
-subinfo=m_getsubinfo;
+subinfo=getsubinfo;
 window_screen=whichscreen;
 [window, rect] = Screen('Openwindow',window_screen,255);
-image_num=4;
-imageDisplay=zeros(image_num,1);
+%%
 cd preparation
-for i=1:image_num
-task_intr=imread(['threshold' num2str(i-1) '.bmp']);
-img=imresize(task_intr,1);
-imageDisplay(i)=Screen('MakeTexture', window, img);
+var_list={'threshold0','threshold1','threshold2','threshold3'};
+image_num=length(var_list);
+imageDisplay=zeros(image_num,1);
+for i=1:length(var_list)
+    eval([var_list{i} '=imread(''' var_list{i} '.bmp'');']);
+    eval(['ratio=min(rect(3)/size(' var_list{i} ',2),rect(4)/size(' var_list{i} ',1));'])
+    eval([var_list{i} '_img=imresize(' var_list{i} ',ratio);']);
+    eval(['imageDisplay(i)=Screen(''MakeTexture'', window,' var_list{i} '_img);']);
 end
 cd ..
+%%
 ListenChar(2);
-% HideCursor;
+HideCursor;
 KbName('UnifyKeyNames');
 KbCheckList = [KbName('space'),KbName('ESCAPE'),KbName('s')];
 RestrictKeysForKbCheck(KbCheckList);
@@ -23,21 +27,22 @@ duration=5;
 %% preparation
 Screen('DrawTexture', window, imageDisplay(1), [], [],0);
 Screen('Flip',window);
-wait4space;
+wait4press;
 repeatnum=2;
 relax_grip=cell(repeatnum,1);
-maxgrip=cell(repeatnum,1);
+force_grip=cell(repeatnum,1);
 for i=1:repeatnum
 Screen('DrawTexture', window, imageDisplay(2), [], [],0);
 Screen('Flip',window,[],1);
 relax_grip{i}=grip(duration,window,rect);
 Screen('DrawTexture', window, imageDisplay(3), [], [],0);
 Screen('Flip',window,[],1);
-maxgrip{i}=grip(duration,window,rect);
+force_grip{i}=grip(duration,window,rect);
 end
-relax_mean_grip=cellfun(@mean,relax_grip);
+relax_mean_grip=double(cellfun(@mean,relax_grip));
 min_grip=mean(relax_mean_grip);
-max_grip=double(max(cellfun(@max,maxgrip)));    
+force_mean_grip=double(cellfun(@max,force_grip));   
+max_grip=max(force_mean_grip);
 cd data
 filename=['threshold' subinfo{1} '.mat'];
 save(filename,'min_grip','max_grip');
@@ -47,6 +52,8 @@ Screen('Flip',window);
 WaitSecs(3);
 disp(['Your relax grip force is ' num2str(min_grip/8000*500) 'N.']);
 disp(['Your max grip force is ' num2str(max_grip/8000*500) 'N.']);
+disp(relax_mean_grip'/8000*500);
+disp(force_mean_grip'/8000*500);
 Screen('Closeall');
 ListenChar;
 ShowCursor;
@@ -64,3 +71,10 @@ end
 %     sca;
 %     unloadlibrary( 'USB_DAQ_DLL_V42');
 % end
+function subinfo=getsubinfo()
+prompt={'subject number'};
+dlg_title='Threshold';
+num_lines=1;
+defaultanswer={'000'};
+subinfo=inputdlg(prompt,dlg_title,num_lines,defaultanswer);
+end

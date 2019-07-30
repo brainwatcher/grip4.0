@@ -11,20 +11,24 @@ trial_num=result{2};
 % trial_num=result(2);
 t0=GetSecs;
 disp(['The block number is ' num2str(length(bpm))]);
+disp(bpm);
 disp(['The trial_num is ' num2str(trial_num)]);
 for w=1:length(bpm)
     interval=60/bpm(w);
     result = labReceive(1);
+    disp(['block ' num2str(w) ' begin']);
     t0=GetSecs;
     for i=1:result(2)
         [t0,~] = soundbeep(t0,interval,S.y,S.Fs);
     end
     for j=1:trial_num(w)
         result = labReceive(1);
+        disp(['block ' num2str(w) ' trial ' num2str(j) ' begin']);
         t0=GetSecs;
         for i=1:result(2)
         [t0,~] = soundbeep(t0,interval,S.y,S.Fs);
         end
+        disp(['block ' num2str(w) ' trial ' num2str(j) ' end']);
     end
 end
             

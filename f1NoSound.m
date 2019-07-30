@@ -1,7 +1,15 @@
+function f1NoSound(sub_num,trial_num,session)
 %%
- try
+try
+    if session==0
+        filename=['p_NoSound_' sub_num '.mat'];
+        filenameEM=['p_NoSound_' sub_num  '_EM.mat'];
+    else
+        filename=['t_' sub_num '_' num2str(session) '.mat'];
+        filenameEM=['t_' sub_num '_' num2str(session) '_EM.mat'];
+    end
     %% important parameter
-    trial_num=[3,2];
+    %     trial_num=[3,2];
     block=length(trial_num);
     wait_time=2;
     %     session= str2double(subinfo{2});
@@ -17,7 +25,7 @@
     % HideCursor;
     %% get min and max grip force
     cd data;
-    loadfilename=['threshold' subinfo{1} '.mat'];
+    loadfilename=['threshold' sub_num '.mat'];
     G=load(loadfilename);
     disp(['Your max force is ' num2str(G.max_grip/16) '...']);
     cd ..
@@ -223,7 +231,6 @@
     end
     wait4press;
     cd data
-    filename=['t_' subinfo{1} '_' subinfo{2} '.mat'];
     save(filename,'acc_all','rt_all','path_all','time_all','rt0','rt1','cursor_size','ans_gate','base','loop_num');
     disp(['Successfully saved train data!'])
     cd ..
@@ -239,8 +246,8 @@ catch ErrorInfo
     disp(ErrorInfo.stack);
     disp(ErrorInfo.cause);
     cd data
-    filename=['t_' subinfo{1} '_' subinfo{2} 'EM.mat'];
-    save(filename);
+    
+    save(filenameEM);
     disp('Emergency saved during Training!');
     cd ..
     Screen('Closeall')
@@ -248,6 +255,7 @@ catch ErrorInfo
     ShowCursor;
     sca;
     unloadlibrary( 'USB_DAQ_DLL_V42');
+end
 end
 
 

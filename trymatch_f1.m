@@ -1,14 +1,14 @@
 %% key parameter
 time=20;
-lag=linspace(0,1,time)*0.3;
+lag=linspace(0,1,time)*1;
 a=randperm(time);
 lag=lag(a)';
 interval=0.5;
 %% window preparation
 Screen('Preference', 'SkipSyncTests', 1);
-[window, rect] = Screen('Openwindow',whichscreen,255);
+[window, rect] = Screen('Openwindow',whichscreen,255,[100,100,500,400]);
 cd preparation
-var_list={'trymatch0','trymatch_left','trymatch_right'};
+var_list={'trymatch0','trymatch_left','trymatch_right','space'};
 imageDisplay_key=zeros(length(var_list),1);
 for i=1:length(var_list)
     eval([var_list{i} '=imread(''' var_list{i} '.bmp'');']);
@@ -32,6 +32,9 @@ imageDisplay_go=Screen('MakeTexture', window, symbol_img);
 t0=zeros(time,1);
 t1=zeros(time,1);
 key=zeros(time,1);
+Screen('DrawTexture', window, imageDisplay_key(4), [], [],0);% press space to continue
+Screen('Flip',window);
+wait4press;
 labSend(time, 2);
 for i=1:time
     Screen('DrawTexture', window, imageDisplay_stop, [], [symbol_pos,symbol_pos+symbol_size],0);
@@ -64,7 +67,7 @@ lag0=A_fit(3);
 %%
 cd data
 prefix='trymatch';
-filename=[prefix subinfo{1} '.mat'];
+filename=[prefix subNumStr '.mat'];
 save(filename,'key','lag','f1','A_fit','A0','lag0')
 disp([prefix 'Successfully saved!'])
 cd ..

@@ -16,7 +16,7 @@ for i=1:5
     if i<5
         bin(i,2)=ratio*label_index(i+1)+(1-ratio)*label_index(i+2);
     else
-        bin(i,2)=label_index(i+1);
+        bin(i,2)=length(path);% gate 5 error
     end
 end
 %% find local maxima in path
@@ -24,7 +24,14 @@ end
 %% get the shoot bin
 mark=path>base;
 k=find(mark==0);
+if isempty(k)
+    disp('Not initial correctly!');
+    acc=zeros(1,5);
+    shoot=zeros(1,5);
+    return;
+end
 initial=k(1);
+
 clear k
 mark1=diff([0,mark']);
 shoot_on=find(mark1==1);

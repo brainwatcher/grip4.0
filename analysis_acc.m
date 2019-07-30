@@ -1,11 +1,11 @@
 %% load data
 cdgrip;
-subinfo='001';
+subinfo='000';
 cd data
 S=load(['m_' num2str(subinfo) '.mat']);
 cd ..
-block=1;
-trial=2;
+block=2;
+trial=1;
 base=S.base;
 ans_gate=S.ans_gate;
 path=S.path_all{block}{trial};
@@ -121,4 +121,6 @@ for i=1:5
     end
 end
 legend([p1(3),p2],{'the raw peak','the screened peak'})
+%% 
+acc
 

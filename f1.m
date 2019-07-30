@@ -1,4 +1,4 @@
-function [t0,rect,acc] = f1(subinfo,trial_num_per_block,bpm,mode)
+function [t0,rect,acc] = f1(subNumStr,trial_num_per_block,bpm,mode,windowmode)
 %%
 try
     block=size(bpm,2);
@@ -6,12 +6,12 @@ try
     if mode==1
         prefix='m_';
     elseif mode==0
-        prefix='p_';
+        prefix='p_Sound_';
     else
         error('Not select practice or main test!')
     end
     cd data
-    S=load(['trymatch' subinfo{1} '.mat']);
+    S=load(['trymatch' subNumStr '.mat']);
     cd ..
     lag=S.lag0;
     wait_time=2;
@@ -23,11 +23,11 @@ try
     KbName('UnifyKeyNames');
     KbCheckList = [KbName('space'),KbName('ESCAPE'),KbName('s')];
     RestrictKeysForKbCheck(KbCheckList);
-    % ListenChar(2);
-    % HideCursor;
+    ListenChar(2);
+    HideCursor;
     %% get min and max grip force
     cd data;
-    loadfilename=['threshold' subinfo{1} '.mat'];
+    loadfilename=['threshold' subNumStr '.mat'];
     G=load(loadfilename);
     disp(['Your max force is ' num2str(G.max_grip/16) '...']);
     cd ..
@@ -37,18 +37,28 @@ try
     right=imread('right.png');
     wrong=imread('wrong.png');
     relax=imread('relax.bmp');
+    space_bmp=imread('space.bmp');
     bpm_prepare=imread('bpm_prepare.bmp');
     B=load('back.mat');
     loadlibrary('USB_DAQ_DLL_V42','USB_DAQ_DLL_V42');
     cd ..
     %% open window
-    [window, rect] = Screen('Openwindow',window_screen,255/2);%,[100,100,500,400]
+    % windowmode 0 : full screen; 1: small window 
+    if windowmode==0
+        [window, rect] = Screen('Openwindow',window_screen,255/2);%,[100,100,500,400]
+    elseif windowmode==1
+        [window, rect] = Screen('Openwindow',window_screen,255/2,[100,100,500,400]);
+    end
+    %% ratio
     ratio=min(rect(3)/size(back,2),rect(4)/size(back,1)); % the ratio of zoom back image
     back_img=imresize(back,ratio);
     imageDisplay=Screen('MakeTexture', window, back_img);
     gate=B.gate0*ratio;% zoomed gate position
     base=(2*B.home0(2)-B.home0(1))*ratio;% shoot base threshold
     start=B.home0*ratio;% zoomed home position
+    %% space
+    space_img=imresize(space_bmp,min(rect(3)/size(space_bmp,2),rect(4)/size(space_bmp,1)));
+    imageDisplay_space=Screen('MakeTexture', window,space_img);
     %% cursor
     cursor_size=25;
     cursor_img=ones(cursor_size,cursor_size);%cursorsize
@@ -80,10 +90,10 @@ try
     symbol_img(:,:,2)=255;
     symbol_img(:,:,3)=0;
     imageDisplay_go=Screen('MakeTexture', window, symbol_img);
-%     symbol_img(:,:,1)=255 ;
-%     symbol_img(:,:,2)=255;
-%     symbol_img(:,:,3)=0;
-%     imageDisplay_ready=Screen('MakeTexture', window, symbol_img);
+    %     symbol_img(:,:,1)=255 ;
+    %     symbol_img(:,:,2)=255;
+    %     symbol_img(:,:,3)=0;
+    %     imageDisplay_ready=Screen('MakeTexture', window, symbol_img);
     symbol_pos=[0.6*rect(3),(rect(4)+size(back_img,1))*0.5-2*symbol_size];
     %% feed back
     right_img=imresize(right,50/rect(3)*size(back_img,2)/max(size(right)));
@@ -122,7 +132,9 @@ try
     path_all=cell(1,block);
     time_all=cell(1,block);
     loop_num=cell(1,block);
-    
+    Screen('DrawTexture', window, imageDisplay_space, [], [],0);
+    Screen('Flip',window);
+    wait4press;% 按空格开始；按esc退出
     t0=GetSecs;
     labSend({bpm,trial_num}, 2);
     for w=1:length(bpm)
@@ -133,11 +145,10 @@ try
         path_all{w}=cell(1,trial_num(w));
         time_all{w}=cell(1,trial_num(w));
         loop_num{w}=zeros(1,trial_num(w));
-        disp(['Block ' num2str(w) ' begin']);
+        disp(['block ' num2str(w) ' begin']);
         interval=60/bpm(w);
         max_time=interval*5.5;
         prepare_beep_num=fix(prepare_time/interval)+1;
-        wait4press;
         labSend([0,prepare_beep_num], 2);
         WaitSecs(lag);
         Screen('DrawTexture', window, imageDisplay8, [], [],0);
@@ -153,7 +164,7 @@ try
         disp('Prepare epoch finished.')
         WaitSecs(2.0);%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
         for j=1:trial_num
-            disp(['trial ' num2str(j) ' begin']);
+            disp(['block ' num2str(w) ' trial ' num2str(j) ' begin']);
             labSend([j,9], 2); % ready 5 + gate 5
             WaitSecs(lag);
             % trial parameter
@@ -170,12 +181,12 @@ try
             Screen('DrawTexture', window, imageDisplay, [], [],0);
             Screen('DrawTexture', window, imageDisplay_cursor, [], [start(1),cursor_height,start(1)+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
             Screen('DrawTexture', window, imageDisplay_go, [], [symbol_pos,symbol_pos+symbol_size],0);
-%             Screen('Flip',window,t0+i*interval);
-%             % peep one times for yellow
-%             i=i+1;
-%             Screen('DrawTexture', window, imageDisplay, [], [],0);
-%             Screen('DrawTexture', window, imageDisplay_cursor, [], [start(1),cursor_height,start(1)+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
-%             Screen('DrawTexture', window, imageDisplay_go,[], [symbol_pos,symbol_pos+symbol_size],0);
+            %             Screen('Flip',window,t0+i*interval);
+            %             % peep one times for yellow
+            %             i=i+1;
+            %             Screen('DrawTexture', window, imageDisplay, [], [],0);
+            %             Screen('DrawTexture', window, imageDisplay_cursor, [], [start(1),cursor_height,start(1)+size(cursor_img,1),cursor_height+size(cursor_img,2)],0);
+            %             Screen('DrawTexture', window, imageDisplay_go,[], [symbol_pos,symbol_pos+symbol_size],0);
             rt0{w}(j)=Screen('Flip',window,t0+i*interval);
             ii=0;
             while GetSecs-rt0{w}(j)<max_time % Note max time 5 to 6
@@ -207,8 +218,9 @@ try
             if isnan(rt1{w}(j))
                 rt1{w}(j)=max_time+rt0{w}(j);
             end
-            disp(['trial ' num2str(j) ' acc evaluation begin']);
+            disp(['block ' num2str(w) ' trial ' num2str(j) ' acc evaluation begin']);
             [acc,path,time,shoot]=evaluate_acc(path,time,base,ans_gate,rt0{w}(j),interval);
+            disp(['block ' num2str(w) ' trial ' num2str(j) ' acc evaluation end']);
             time_all{w}{j}=time;
             acc_all{w}{j}=acc;
             rt_all{w}(j)=rt1{w}(j)-rt0{w}(j);
@@ -232,6 +244,7 @@ try
             end
             Screen('DrawTexture', window, imageDisplay_stop, [], [symbol_pos,symbol_pos+symbol_size],0);
             Screen('Flip',window);
+            disp(['block ' num2str(w) ' trial ' num2str(j) ' end']);
             WaitSecs(wait_time);
         end
         if w<block
@@ -242,7 +255,7 @@ try
         end
     end
     cd data
-    filename=[prefix subinfo{1} '.mat'];
+    filename=[prefix subNumStr '.mat'];
     save(filename,'acc_all','rt_all','path_all','time_all','rt0','rt1','time_all','bpm','cursor_size','ans_gate','base');
     disp(['Successfully saved!'])
     cd ..
@@ -258,7 +271,7 @@ catch ErrorInfo
     disp(ErrorInfo.stack);
     disp(ErrorInfo.cause);
     cd data
-    filename=[prefix subinfo{1} '_EM.mat'];
+    filename=[prefix subNumStr '_EM.mat'];
     save(filename);
     disp('Emergency saved during Main test! ');
     cd ..

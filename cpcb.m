@@ -1,4 +1,7 @@
 function cpcb
-delete(gcp('nocreate'));
+ myCluster = parcluster('local');
+ delete(myCluster.Jobs);
+ 
+% delete(gcp('nocreate'));
 end
 
