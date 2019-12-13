@@ -196,6 +196,7 @@ try
             end
             disp(['trial ' num2str(j) ' acc evaluation begin']);
             [acc,path,time,shoot] = t_evaluate_acc(path,time,ans_gate,base);
+            disp(['trial ' num2str(j) ' acc evaluation end']);
             time_all{w}{j}=time;
             acc_all{w}{j}=acc;
             rt_all{w}(j)=rt1{w}(j)-rt0{w}(j);

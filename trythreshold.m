@@ -52,13 +52,13 @@ Screen('Flip',window);
 WaitSecs(3);
 disp(['Your relax grip force is ' num2str(min_grip/8000*500) 'N.']);
 disp(['Your max grip force is ' num2str(max_grip/8000*500) 'N.']);
-disp(relax_mean_grip'/8000*500);
-disp(force_mean_grip'/8000*500);
+disp(relax_mean_grip'./8000*500);
+disp(force_mean_grip'./8000*500);
 Screen('Closeall');
 ListenChar;
 ShowCursor;
 if max(relax_mean_grip)-min(relax_mean_grip)>min(relax_mean_grip)*0.5
-    warning(['Relax grip may not measured correctly!']);
+    warning('Relax grip may not measured correctly!');
 end
 % catch ErrorInfo
 %     disp(ErrorInfo);

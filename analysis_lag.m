@@ -1,4 +1,4 @@
-subinfo=m_getsubinfo;  
+subinfo=getsubinfo;  
 cd data
 prefix='trymatch';
 filename=[prefix subinfo{1} '.mat'];
@@ -21,3 +21,11 @@ plot(0:0.01:max(S.lag),y1,'--')
 lag=A_fit(3);
 plot(lag,f(A_fit,lag),'r*');
 text(lag+0.03,f(A_fit,lag),['lag=' num2str(lag)])
+
+function subinfo=getsubinfo()
+prompt={'subject number'};
+dlg_title='lag';
+num_lines=1;
+defaultanswer={'000'};
+subinfo=inputdlg(prompt,dlg_title,num_lines,defaultanswer);
+end

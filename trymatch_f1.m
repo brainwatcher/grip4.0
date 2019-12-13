@@ -6,7 +6,7 @@ lag=lag(a)';
 interval=0.5;
 %% window preparation
 Screen('Preference', 'SkipSyncTests', 1);
-[window, rect] = Screen('Openwindow',whichscreen,255,[100,100,500,400]);
+[window, rect] = Screen('Openwindow',whichscreen,255);
 cd preparation
 var_list={'trymatch0','trymatch_left','trymatch_right','space'};
 imageDisplay_key=zeros(length(var_list),1);

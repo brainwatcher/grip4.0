@@ -1,4 +1,4 @@
-subinfo=p_getsubinfo;  
+ subinfo=p_getsubinfo;  
 sub_num=subinfo{1};
 trial_num=str2double(subinfo{2});
 session=0;
